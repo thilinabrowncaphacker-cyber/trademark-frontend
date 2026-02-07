@@ -162,6 +162,12 @@
         window.history.go(1);
       };
 
+    //no hacks
+
+    function sanitize(text) {
+  return text.replace(/[<>]/g, "");
+}
+
     // Auth check
     if (sessionStorage.getItem("isLoggedIn") !== "true") {
       window.location.href = "index.html";
@@ -200,7 +206,7 @@
       e.preventDefault();
 
       const classNo = classInput.value;
-      const goods = document.getElementById("goodsInput").value;
+      const goods = sanitize(document.getElementById("goodsInput").value);
 
       const goodsList = goods.split(/,|;|\n/).map(g => g.trim()).filter(Boolean);
 
