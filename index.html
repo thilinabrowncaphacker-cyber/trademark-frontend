@@ -121,7 +121,10 @@
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
 
-      if (email === "tm@tsr" && password === "Tt*1993") {
+      const USERNAME = "tm@tsr";
+      const PASSWORD_HASH = "8C6976e";
+      
+      {
         sessionStorage.setItem("isLoggedIn", "true");
         window.location.href = "./tables.html";
       } else {
