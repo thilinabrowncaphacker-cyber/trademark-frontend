@@ -17,7 +17,6 @@
   <!-- Soft UI CSS -->
   <link id="pagestyle" href="assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
 
-  <!-- Circular Progress CSS -->
   <style>
     .circular-chart {
       display: block;
@@ -51,6 +50,10 @@
       fill: #333;
       font-size: 0.5em;
       text-anchor: middle;
+    }
+
+    .text-success {
+      font-weight: 600;
     }
   </style>
 </head>
@@ -127,6 +130,7 @@
                   <tbody id="tableBody"></tbody>
                 </table>
               </div>
+
               <!-- Suggestions Card -->
               <div class="card mt-4" id="suggestionsCard" style="display:none;">
                 <div class="card-header pb-0">
@@ -136,6 +140,7 @@
                   <ul id="suggestionsList" class="list-group list-group-flush"></ul>
                 </div>
               </div>
+
             </div>
           </div>
         </div>
@@ -196,17 +201,10 @@
 
     const tableBody = document.getElementById("tableBody");
 
-    // Multi-word similarity
-    function wordSimilarity(input, target) {
-      input = input.toLowerCase().trim();
-      target = target.toLowerCase().trim();
-      const inputWords = input.split(" ");
-      const targetWords = target.split(" ");
-      let matchCount = 0;
-      inputWords.forEach(word => {
-        if (targetWords.includes(word)) matchCount++;
-      });
-      return matchCount / inputWords.length;
+    function highlightMatches(input, matchedWords) {
+      return input.split(/\s+/)
+        .map(w => matchedWords.includes(w.toLowerCase()) ? `<span class="text-success">${w}</span>` : w)
+        .join(" ");
     }
 
     document.getElementById("trademarkForm").addEventListener("submit", async (e) => {
@@ -232,20 +230,22 @@
         data.forEach(r => {
           const hasSuggestions = r.suggestions && r.suggestions.length > 0;
           const color = r.score >= 80 ? '#4caf50' : r.score >= 50 ? '#ffb300' : '#f44336';
+
           const progressSVG = `
             <svg viewBox="0 0 36 36" class="circular-chart">
               <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
               <path class="circle" stroke="${color}" stroke-dasharray="${r.score},100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              <title>Matched: ${r.matchedWords.join(", ")}</title>
               <text x="18" y="20.35" class="percentage">${r.score}%</text>
             </svg>
           `;
 
           tableBody.innerHTML += `
             <tr>
-              <td class="text-xs font-weight-bold">${r.good}</td>
+              <td class="text-xs font-weight-bold">${highlightMatches(r.good, r.matchedWords)}</td>
               <td class="text-center">${progressSVG}</td>
               <td class="text-xs">
-                ${r.score >= 90
+                ${r.score >= 80
                   ? "✅ Acceptable as per Nice Classification"
                   : r.score >= 50
                     ? hasSuggestions
@@ -259,10 +259,11 @@
             </tr>
           `;
 
+          // Suggestions list (top 3)
           const suggestionsList = document.getElementById("suggestionsList");
           if (hasSuggestions) {
             suggestionsList.innerHTML = "";
-            r.suggestions.forEach(s => {
+            r.suggestions.slice(0,3).forEach(s => {
               suggestionsList.innerHTML += `<li class="list-group-item">Class ${s.class} — ${s.item} (${s.score}%)</li>`;
             });
             document.getElementById("suggestionsCard").style.display = "block";
