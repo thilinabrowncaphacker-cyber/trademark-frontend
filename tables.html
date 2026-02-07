@@ -156,11 +156,11 @@
   <script src="assets/js/soft-ui-dashboard.min.js?v=1.1.0"></script>
 
   <script>
-
-    window.history.pushState(null, null, window.location.href);
-window.onpopstate = function () {
-  window.history.go(1);
-};
+      // no returns
+          window.history.pushState(null, null, window.location.href);
+      window.onpopstate = function () {
+        window.history.go(1);
+      };
 
     // Auth check
     if (sessionStorage.getItem("isLoggedIn") !== "true") {
@@ -171,6 +171,22 @@ window.onpopstate = function () {
       sessionStorage.clear();
       window.location.href = "index.html";
     };
+
+    // timerout
+          let logoutTimer;
+      
+      function resetTimer() {
+        clearTimeout(logoutTimer);
+        logoutTimer = setTimeout(() => {
+          sessionStorage.clear();
+          window.location.href = "./index.html";
+        }, 10 * 60 * 1000); // 10 minutes
+      }
+      
+      document.onmousemove = resetTimer;
+      document.onkeydown = resetTimer;
+      resetTimer();
+
 
     // Populate classes
     const classInput = document.getElementById("classInput");
