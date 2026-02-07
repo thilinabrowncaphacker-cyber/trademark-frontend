@@ -130,16 +130,17 @@
       `;
 
       // Show suggestions if any
-      const suggestionsList = document.getElementById("suggestionsList");
-      if (r.suggestions.length > 0) {
-        suggestionsList.innerHTML = "";
-        r.suggestions.forEach(s => {
-          suggestionsList.innerHTML += `<li class="list-group-item">Class ${s.class} — ${s.item} (${s.score}%)</li>`;
-        });
-        document.getElementById("suggestionsCard").style.display = "block";
-      } else {
-        document.getElementById("suggestionsCard").style.display = "none";
-      }
+              const suggestionsList = document.getElementById("suggestionsList");
+        if (!r.matched && r.suggestions.length > 0) {
+          suggestionsList.innerHTML = "";
+          r.suggestions.forEach(s => {
+            suggestionsList.innerHTML += `<li class="list-group-item">Class ${s.class} — ${s.item} (${s.score}%)</li>`;
+          });
+          document.getElementById("suggestionsCard").style.display = "block";
+        } else if (r.matched) {
+          document.getElementById("suggestionsCard").style.display = "none";
+        }
+
     });
   });
 
