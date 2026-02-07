@@ -115,15 +115,32 @@
 
   <!-- Login Logic -->
     <script>
-async function hash(text) {
-  const msgBuffer = new TextEncoder().encode(text);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+  const USERNAME = "tm@tsr";
+  const PASSWORD_HASH = "47892b0abbeae8c858103d98e61c74ce85adbfb5461042a08226ca79b11a42ca";
 
-hash("Tt*1993").then(console.log);
+  async function hash(text) {
+    const msgBuffer = new TextEncoder().encode(text);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+    return Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
+  }
+
+  document.getElementById("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const hashedPassword = await hash(password);
+
+    if (email === USERNAME && hashedPassword === PASSWORD_HASH) {
+      sessionStorage.setItem("isLoggedIn", "true");
+      window.location.href = "./tables.html";
+    } else {
+      alert("Wrong login");
+    }
+  });
 </script>
 
 
