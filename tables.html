@@ -1,270 +1,152 @@
-<!DOCTYPE html>
-<html lang="en">
+<script>
+  // Prevent back button
+  window.history.pushState(null, null, window.location.href);
+  window.onpopstate = () => window.history.go(1);
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="apple-touch-icon" sizes="76x76" href="assets/img/apple-icon.png">
-  <link rel="icon" type="image/png" href="assets/img/favicon.png">
-  <title>Trademark Class Tool</title>
+  // Sanitize input
+  function sanitize(text) {
+    return text.replace(/[<>]/g, "");
+  }
 
-  <!-- Fonts and icons -->
-  <link href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700,800" rel="stylesheet" />
-  <link href="assets/css/nucleo-icons.css" rel="stylesheet" />
-  <link href="assets/css/nucleo-svg.css" rel="stylesheet" />
-  <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+  // Auth check
+  if (sessionStorage.getItem("isLoggedIn") !== "true") {
+    window.location.href = "index.html";
+  }
 
-  <!-- Soft UI CSS -->
-  <link id="pagestyle" href="assets/css/soft-ui-dashboard.css?v=1.1.0" rel="stylesheet" />
+  document.getElementById("logoutBtn").onclick = () => {
+    sessionStorage.clear();
+    window.location.href = "index.html";
+  };
 
-  <!-- Circular Progress CSS -->
-  <style>
-    .circular-chart {
-      display: block;
-      margin: 0 auto;
-      max-width: 50px;
-      max-height: 50px;
-    }
-
-    .circle-bg {
-      fill: none;
-      stroke: #eee;
-      stroke-width: 3.8;
-    }
-
-    .circle {
-      fill: none;
-      stroke-width: 3.8;
-      stroke-linecap: round;
-      animation: progress 1s ease-out forwards;
-      transform: rotate(-90deg);
-      transform-origin: 50% 50%;
-    }
-
-    @keyframes progress {
-      0% { stroke-dasharray: 0, 100; }
-    }
-
-    .percentage {
-      fill: #333;
-      font-size: 0.5em;
-      text-anchor: middle;
-    }
-  </style>
-</head>
-
-<body class="g-sidenav-show bg-gray-100">
-
-  <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg">
-
-    <!-- Navbar -->
-    <nav class="navbar navbar-main navbar-expand-lg px-0 mx-4 shadow-none border-radius-xl">
-      <div class="container-fluid py-1 px-3">
-        <h6 class="font-weight-bolder mb-0">Trademark Class Tool</h6>
-        <button id="logoutBtn" class="btn btn-danger btn-sm ms-auto">Logout</button>
-      </div>
-    </nav>
-
-    <div class="container-fluid py-4">
-
-      <!-- Input Card -->
-      <div class="row mb-4">
-        <div class="col-12">
-          <div class="card shadow-lg">
-            <div class="card-header pb-0">
-              <h6>Enter Goods / Services</h6>
-            </div>
-            <div class="card-body">
-              <form id="trademarkForm">
-                <div class="row">
-                  <div class="col-md-4 mb-3">
-                    <label class="form-label">Class</label>
-                    <select class="form-control" id="classInput" required>
-                      <option value="" disabled selected>Select Class</option>
-                    </select>
-                  </div>
-
-                  <div class="col-md-8 mb-3">
-                    <label class="form-label">Goods / Services</label>
-                    <input type="text" class="form-control" id="goodsInput"
-                      placeholder="e.g. chemical preparations for industrial use" required>
-                  </div>
-                </div>
-
-                <button type="submit" class="btn bg-gradient-primary mt-2 me-2">Check</button>
-                <button type="button" id="resetBtn" class="btn bg-gradient-success mt-2">Reset</button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Results -->
-      <div class="row">
-        <div class="col-12">
-          <div class="card shadow-lg">
-            <div class="card-header pb-0">
-              <h6>MGS Results</h6>
-            </div>
-            <div class="card-body px-0 pt-0 pb-2">
-              <div class="table-responsive p-3">
-                <table class="table align-items-center mb-0">
-                  <thead>
-                    <tr>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                        Goods / Services
-                      </th>
-                      <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                        Match %
-                      </th>
-                      <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
-                        Notes
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody id="tableBody"></tbody>
-                </table>
-              </div>
-              <!-- Suggestions Card -->
-              <div class="card mt-4" id="suggestionsCard" style="display:none;">
-                <div class="card-header pb-0">
-                  <h6>Suggested Classes</h6>
-                </div>
-                <div class="card-body">
-                  <ul id="suggestionsList" class="list-group list-group-flush"></ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </main>
-
-  <footer class="footer py-4">
-    <div class="container text-center">
-      <p class="mb-0 text-secondary">
-        © <script>document.write(new Date().getFullYear())</script> Sandaruwan Rajapaksha
-      </p>
-    </div>
-  </footer>
-
-  <!-- Core JS -->
-  <script src="assets/js/core/popper.min.js"></script>
-  <script src="assets/js/core/bootstrap.min.js"></script>
-  <script src="assets/js/soft-ui-dashboard.min.js?v=1.1.0"></script>
-
-  <script>
-      // no returns
-          window.history.pushState(null, null, window.location.href);
-      window.onpopstate = function () {
-        window.history.go(1);
-      };
-
-    //no hacks
-
-    function sanitize(text) {
-  return text.replace(/[<>]/g, "");
-}
-
-    // Auth check
-    if (sessionStorage.getItem("isLoggedIn") !== "true") {
-      window.location.href = "index.html";
-    }
-
-    document.getElementById("logoutBtn").onclick = () => {
+  // Auto logout after inactivity
+  let logoutTimer;
+  function resetTimer() {
+    clearTimeout(logoutTimer);
+    logoutTimer = setTimeout(() => {
       sessionStorage.clear();
-      window.location.href = "index.html";
-    };
+      window.location.href = "./index.html";
+    }, 10 * 60 * 1000);
+  }
+  document.onmousemove = resetTimer;
+  document.onkeydown = resetTimer;
+  resetTimer();
 
-    // timerout
-          let logoutTimer;
-      
-      function resetTimer() {
-        clearTimeout(logoutTimer);
-        logoutTimer = setTimeout(() => {
-          sessionStorage.clear();
-          window.location.href = "./index.html";
-        }, 10 * 60 * 1000); // 10 minutes
-      }
-      
-      document.onmousemove = resetTimer;
-      document.onkeydown = resetTimer;
-      resetTimer();
+  // Populate class dropdown
+  const classInput = document.getElementById("classInput");
+  for (let i = 1; i <= 45; i++) {
+    classInput.innerHTML += `<option value="${i}">${i}</option>`;
+  }
 
+  const tableBody = document.getElementById("tableBody");
 
-    // Populate classes
-    const classInput = document.getElementById("classInput");
-    for (let i = 1; i <= 45; i++) {
-      classInput.innerHTML += `<option value="${i}">${i}</option>`;
-    }
+  // Word-level similarity
+  function wordSimilarity(input, target) {
+    input = input.toLowerCase().trim();
+    target = target.toLowerCase().trim();
 
-    const tableBody = document.getElementById("tableBody");
+    const inputWords = input.split(" ");
+    const targetWords = target.split(" ");
 
-    document.getElementById("trademarkForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const classNo = classInput.value;
-      const goods = sanitize(document.getElementById("goodsInput").value);
-
-      const goodsList = goods.split(/,|;|\n/).map(g => g.trim()).filter(Boolean);
-
-      tableBody.innerHTML = "<tr><td colspan='3'>Checking...</td></tr>";
-
-      const res = await fetch("https://trademark-backend-production.up.railway.app/check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ classNo, goods: goodsList })
-      });
-
-      const data = await res.json();
-      tableBody.innerHTML = "";
-
-      data.forEach(r => {
-        const color = r.score >= 80 ? '#4caf50' : r.score >= 50 ? '#ffb300' : '#f44336';
-        const progressSVG = `
-          <svg viewBox="0 0 36 36" class="circular-chart">
-            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-            <path class="circle" stroke="${color}" stroke-dasharray="${r.score},100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
-            <text x="18" y="20.35" class="percentage">${r.score}%</text>
-          </svg>
-        `;
-
-        tableBody.innerHTML += `
-          <tr>
-            <td class="text-xs font-weight-bold">${r.good}</td>
-            <td class="text-center">${progressSVG}</td>
-            <td class="text-xs">
-              ${r.matched
-                ? "Acceptable as per Nice Classification"
-                : "Revise wording to align with MGS terminology"}
-            </td>
-          </tr>
-        `;
-
-        const suggestionsList = document.getElementById("suggestionsList");
-        if (!r.matched && r.suggestions.length > 0) {
-          suggestionsList.innerHTML = "";
-          r.suggestions.forEach(s => {
-            suggestionsList.innerHTML += `<li class="list-group-item">Class ${s.class} — ${s.item} (${s.score}%)</li>`;
-          });
-          document.getElementById("suggestionsCard").style.display = "block";
-        } else if (r.matched) {
-          document.getElementById("suggestionsCard").style.display = "none";
-        }
-      });
+    let matchCount = 0;
+    inputWords.forEach(word => {
+      if (targetWords.includes(word)) matchCount++;
     });
 
-    document.getElementById("resetBtn").onclick = () => {
-      document.getElementById("goodsInput").value = "";
-      tableBody.innerHTML = "";
-      classInput.value = "";
-      document.getElementById("suggestionsCard").style.display = "none";
-    };
+    return matchCount / inputWords.length; // 0-1
+  }
 
-    
-  </script>
+  function checkClass(item, classItems) {
+    let highest = 0;
+    classItems.forEach(ci => {
+      const sim = wordSimilarity(item, ci);
+      if (sim > highest) highest = sim;
+    });
+    return highest;
+  }
 
-</body>
-</html>
+  function suggestClass(item, mgsData, currentClass) {
+    let bestClass = null;
+    let highestSim = 0;
+    let bestItem = null;
+
+    for (const key in mgsData) {
+      if (key === currentClass) continue;
+      const classItems = mgsData[key].items;
+      classItems.forEach(ci => {
+        const sim = wordSimilarity(item, ci);
+        if (sim > highestSim) {
+          highestSim = sim;
+          bestClass = mgsData[key].class_name;
+          bestItem = ci;
+        }
+      });
+    }
+
+    return { suggestedClass: bestClass || "No suitable class found", score: Math.round(highestSim*100), item: bestItem };
+  }
+
+  document.getElementById("trademarkForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const classNo = classInput.value;
+    const goods = sanitize(document.getElementById("goodsInput").value);
+    const goodsList = goods.split(/,|;|\n/).map(g => g.trim()).filter(Boolean);
+
+    tableBody.innerHTML = "<tr><td colspan='3'>Checking...</td></tr>";
+    document.getElementById("suggestionsCard").style.display = "none";
+
+    const res = await fetch("https://trademark-backend-production.up.railway.app/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ classNo, goods: goodsList })
+    });
+
+    const data = await res.json();
+    tableBody.innerHTML = "";
+
+    data.forEach(r => {
+      const color = r.score >= 80 ? '#4caf50' : r.score >= 50 ? '#ffb300' : '#f44336';
+      const progressSVG = `
+        <svg viewBox="0 0 36 36" class="circular-chart">
+          <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          <path class="circle" stroke="${color}" stroke-dasharray="${r.score},100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+          <text x="18" y="20.35" class="percentage">${r.score}%</text>
+        </svg>
+      `;
+
+      tableBody.innerHTML += `
+        <tr>
+          <td class="text-xs font-weight-bold">${r.good}</td>
+          <td class="text-center">${progressSVG}</td>
+          <td class="text-xs">
+            ${r.score >= 90
+              ? "✅ Acceptable as per Nice Classification"
+              : r.score >= 50
+                ? `⚠️ Partially matches. Suggested: Class ${r.suggestions[0]?.class} — ${r.suggestions[0]?.item} (${r.suggestions[0]?.score}%)`
+                : `❌ Does not fit. Closest match: Class ${r.suggestions[0]?.class} — ${r.suggestions[0]?.item} (${r.suggestions[0]?.score}%)`
+            }
+          </td>
+        </tr>
+      `;
+
+      // Show suggestions if any
+      const suggestionsList = document.getElementById("suggestionsList");
+      if (r.suggestions.length > 0) {
+        suggestionsList.innerHTML = "";
+        r.suggestions.forEach(s => {
+          suggestionsList.innerHTML += `<li class="list-group-item">Class ${s.class} — ${s.item} (${s.score}%)</li>`;
+        });
+        document.getElementById("suggestionsCard").style.display = "block";
+      } else {
+        document.getElementById("suggestionsCard").style.display = "none";
+      }
+    });
+  });
+
+  document.getElementById("resetBtn").onclick = () => {
+    document.getElementById("goodsInput").value = "";
+    tableBody.innerHTML = "";
+    classInput.value = "";
+    document.getElementById("suggestionsCard").style.display = "none";
+  };
+</script>
